@@ -1,0 +1,199 @@
+body {
+    color: #1f3349;
+    font-size: 15px;
+    line-height: 24px;
+    font-family: 'Open Sans',sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+}
+
+#chartHolder {
+    width:100%;
+    max-width: 1000px;
+    display: block;
+    margin: 0 auto 120px;
+    font-family: sans-serif;
+}
+
+#chartHolder a {
+    font-weight:bold;
+    text-decoration: none;
+    color:#333;
+}
+
+#chartHolder #userInputExample span {
+    background-color:rgba(31,51,73,.05);
+    padding:7px 9px;
+    border-radius:5px;
+}
+
+#chartHolder #userInput {
+    margin: 20px 0 20px;
+}
+
+#chartHolder #userInput input {
+   font-size: 15px;
+   margin-right: 10px;
+   border-color: #c6d2e1!important;
+   border-style: solid;
+   border-width: 1px;
+   padding:8px 10px;
+   width:60%;
+}
+
+#chartHolder #userInput label {
+    color:#9a9a9a;
+    margin-right: 10px;
+ }
+
+#chartHolder #userInput button {
+    -webkit-font-smoothing: antialiased;
+    text-size-adjust: 100%;
+    box-sizing: inherit;
+    margin: 0;
+    border: 0;
+    background: 0 0;
+    font: inherit;
+    width: auto;
+    appearance: none;
+    user-select: none;
+    cursor: pointer;
+    display: inline-block;
+    font-weight: 700;
+    text-align: center;
+    transition: background-color .125s,border-color .125s,color .125s;
+    font-size: 12px;
+    line-height: 18px;
+    border-radius: 9999px!important;
+    padding: 5px 15px;
+}
+
+#chartHolder #userInput button.primary:hover {
+    background-color: #314ccd;
+}
+
+#chartHolder #userInput button.primary:focus {
+    outline: 0;
+}
+
+#chartHolder #userInput button.secondary:hover {
+    color: #314ccd;
+}
+
+#chartHolder #userInput button.secondary:focus {
+    outline: 0;
+}
+
+#chartHolder #userInput button.primary {
+    border:1px solid #4264fb;
+    background-color: #4264fb;
+    color: #fff;
+}
+
+#chartHolder #userInput button.secondary {
+    border:1px solid #4264fb;
+    background-color:transparent;
+    color: #4264fb;
+}
+
+#chartHolder #statHold {
+    font-size:12px;
+    line-height:8px;
+    color:#9a9a9a;
+}
+
+#chartHolder #statHold span{
+    color:#333;
+}
+
+#chartHolder h2 {
+    margin-bottom: 10px;
+}
+
+#chartHolder #errorNote {
+    margin-left:125px;
+    color:red;
+    display: none;
+    margin-top: -20px;
+}
+
+#chartHolder h4 {
+    margin-top: 35px;
+    padding-top:15px;
+    margin-bottom: 0;
+    border-top: 1px solid!important;
+    border-color: #d6dee8!important;
+}
+
+#chartHolder #styleSheet {
+    padding-top:5px;
+    visibility: hidden;
+}
+
+#chart {
+    display: block;
+}
+
+.circle.maxz, circle.minz {
+    fill:#9a9a9a;
+    fill-opacity:0;
+}
+
+.minz, .maxz {
+  fill: #9a9a9a;
+}
+
+.label.maxz, .label.minz {
+  font-weight:bold;
+}
+
+.dumbbell {
+  font: 11px sans-serif;
+  /* font-weight: bold; */
+}
+
+
+.minz.name {
+    fill:#333333;
+}
+
+line.between {
+  stroke: #9a9a9a;
+  stroke-width: 1;
+}
+
+line.before {
+  stroke: #fff;
+  stroke-width: 1;
+  stroke-dasharray: 1;
+}
+
+.domain {
+    display: none;
+}
+
+.axis text {
+  font: 11px sans-serif;
+}
+
+#mapHold {
+    display: none;
+}
+
+#mapHold .map {
+    width: 33%;
+    font-size:12px;
+    padding: 10px;
+    display: inline-block;
+    box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+    #chartHolder #userInput input {
+        width:50%;
+    }
+
+    #chartHolder #errorNote {
+        margin-left:0;
+    }
+}

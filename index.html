@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Mapbox Stylesheet</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v6.min.js"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.0.1/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.0.1/mapbox-gl.css" rel="stylesheet" />
+<link href="./css/chart.css" rel="stylesheet" />
+</head>
+<body>
+<div id="chartHolder">
+    <h2><a href="https://github.com/willymaps/stylesheet" target="_blank">Mapbox Stylesheet</a></h2>
+    <p>In Mapbox Studio copy the <a href="https://docs.mapbox.com/studio-manual/guides/publish-your-style/#share-button" target="_blank">"Share" URL</a> and paste below to see a holistic view of a map style.</p>
+    <div id="userInput">
+        <form onsubmit="return false;" method="post" name="myForm">
+            <label>Share Style URL</label>
+            <input type="text" name="userName" id="userName" placeholder="https://api.mapbox.com/styles/v1/..." />
+            <button class="primary" onclick="validate()">Submit</button>
+            <button class="secondary" onclick="screenCap()">Export Image</button>
+        </form>
+    </div>
+    <span id="errorNote">Unable to fetch that style. Please try another link.</span>
+    <div id="styleSheet">
+        <div id="statHold">
+            <p>Style Name: <span id="statName"></span></p>
+            <p>Owner: <span id="statOwner"></span></p>
+            <p>Created: <span id="statCreated"></span></p>
+            <p>Modified: <span id="statModified"></span></p>
+        </div>
+        <h4>Layers</h4>
+        <div id="chart"></div>
+        <div id="mapHold">
+            <h4>City Features</h4>
+                <div class="map" id="city-map-one"></div>
+                <div class="map" id="city-map-two"></div>
+                <div class="map" id="city-map-three"></div>
+            <h4>Terrain Features</h4>
+                <div class="map" id="terrain-map-one"></div>
+                <div class="map" id="terrain-map-two"></div>
+                <div class="map" id="terrain-map-three"></div>
+            <h4>Administrative</h4>
+                <div class="map" id="admin-map-one"></div>
+                <div class="map" id="admin-map-two"></div>
+                <div class="map" id="admin-map-three"></div>
+            <h4>Water Features</h4>
+                <div class="map" id="water-map-one"></div>
+                <div class="map" id="water-map-two"></div>
+                <div class="map" id="water-map-three"></div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="./js/html2canvas.js"></script>
+<script>
+
+const chartDiv = document.getElementById("chart");
+const svg = d3.select(chartDiv).append("svg");
+const margin = {top: 30, right: 45, bottom: 30, left: 30};
+
+let initLoad = true;
+let newData = [];
+// let newHeight = 0;
+
+function redraw(url){
+
+    // import data from json
+    d3.json(url)
+        .then((data) => {
+            // console.log('data', data);
+
+            let dateCreated = new Date(data.created);
+            let dateChange = new Date(data.modified);
+            let layers = data.layers;
+
+            document.getElementById('statName').innerHTML = data.name;
+            document.getElementById('statOwner').innerHTML = data.owner;
+            document.getElementById('statCreated').innerHTML = dateCreated.toLocaleString('en-US');
+            document.getElementById('statModified').innerHTML = dateChange.toLocaleString('en-US');
+
+            layers.forEach(element => {
+                // newHeight++;
+                let valueMin = element.minzoom;
+                let valueMax = element.maxzoom;
+                let name = element.id;
+
+                if (valueMin === undefined && valueMax === undefined) {
+                    valueMin = 0;
+                    valueMax = 22;
+                } else if (valueMax === undefined) {
+                    valueMax = 22;
+                } else if (valueMin === undefined) {
+                    valueMin = 0;
+                }
+
+                newData.push({layerName: name, minZoom: valueMin, maxZoom: valueMax});
+            });
+            updateChart();
+        })
+        .then(function() {
+            // console.log('finished drawing');
+            document.getElementById('errorNote').style.display = 'none';
+            
+            if (initLoad) {
+                document.getElementById('styleSheet').style.visibility = "visible";
+                document.getElementById('mapHold').style.display = "block";
+                initLoad = false;
+            }
+        })
+        .catch((error) => {
+            console.error("Error loading the data");
+            document.getElementById('errorNote').style.display = 'block';
+        });
+}
+
+function updateChart() {
+    // remove all existing charts so not duplicating on resize
+    d3.selectAll("svg > *").remove();
+    
+    let newHeight = newData.length;
+    let width = chartDiv.clientWidth;
+    let height;
+    if (newHeight <= 20) {
+        height = newHeight*25;
+    } else {
+        height = newHeight*20;
+    }
+
+    svg
+    .attr("width", width)
+    .attr("height", height);
+
+    let x = d3.scaleLinear().rangeRound([10, width - (margin.left+margin.right)]),
+        y = d3.scalePoint().rangeRound([height - (margin.top+margin.bottom), 0]).padding(0.4);
+
+    let chart = svg.append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    newData.sort(function(a, b) {
+        return d3.descending(+a.minZoom, +b.minZoom);
+    });
+
+    x.domain([0, d3.max(newData, function(d) { return d.maxZoom; })]);
+    y.domain(newData.map(function(d) { return d.layerName; }));
+
+    let dumbbellGroup = chart.append("g")
+        .attr("id", "dumbbellGroup");
+
+    let dumbbell = dumbbellGroup.selectAll(".dumbbell")
+        .data(newData)
+        .enter().append("g")
+        .attr("class", "dumbbell")
+        .attr("transform", function(d) {return "translate(0," + y(d.layerName) + ")"; });
+
+    // lines: between dots
+    dumbbell.append("line")
+        .attr("class", "line between")
+        .style('shape-rendering','crispEdges')
+        .attr("x1", function(d) { return x(d.minZoom); })
+        .attr("x2", function(d) { return x(d.maxZoom); })
+        .attr("y1", 0)
+        .attr("y2", 0);
+
+    // lines: before dots
+    dumbbell.append("line")
+        .attr("class", "line before")
+        .style('shape-rendering','crispEdges')
+        .attr("x1", 0)
+        .attr("x2", function(d) { return x(d.minZoom); })
+        .attr("y1", 0)
+        .attr("y2", 0);
+
+    // dots: maxz inventory
+    dumbbell.append("circle")
+        .attr("class", "circle maxz")
+        .style('shape-rendering','crispEdges')
+        .attr("cx", function(d) { return x(d.maxZoom); })
+        .attr("cy", 0)
+        .attr("r", 2);
+
+    // data labels: maxz
+    dumbbell.append("text")
+        .attr("class", "text maxz")
+        .attr("x", function(d) { return x(d.maxZoom); })
+        .attr("y", 0)
+        .attr("dy", 2)
+        .attr("dx", 8)
+        .text(function(d) { return d.maxZoom; });
+
+    // data labels: minz
+    dumbbell.append("text")
+        .attr("class", "text minz")
+        .attr("x", function(d) { return x(d.minZoom); })
+        .attr("y", 0)
+        .attr("dy", 2)
+        .attr("dx", -8)
+        .attr("text-anchor", "end")
+        .text(function(d) { return d.minZoom; });
+    
+    dumbbell.append("text")
+        .attr("class", "text minz name")
+        .attr("x", function(d) { return x(d.minZoom); })
+        .attr("y", 0)
+        .attr("dy", "-0.35em")
+        .attr("dx", 0)
+        .attr("text-anchor", "start")
+        .text(function(d) { return d.layerName; });
+
+    d3.select(".dumbbell:last-child")
+        .append("text")
+        .attr("class", "label maxz")
+        .attr("x", function(d) { return x(d.maxZoom); })
+        .attr("y", 0)
+        .attr("dy", -25)
+        .attr("text-anchor", "middle")
+        .text("Max. Zoom");
+    d3.select(".dumbbell:last-child")
+        .append("text")
+        .attr("class", "label minz")
+        .attr("x", function(d) { return x(d.minZoom); })
+        .attr("y", 0)
+        .attr("dy", -25)
+        .attr("text-anchor", "middle")
+        .text(function(d) { return "Min. Zoom"; });
+
+    // dots: minz inventory
+    dumbbell.append("circle")
+        .attr("class", "circle minz")
+        .attr("cx", function(d) { return x(d.minZoom); })
+        .attr("cy", 0)
+        .attr("r", 2);
+
+}
+
+// Redraw based on the new size whenever the browser window is resized.
+window.addEventListener("resize", function() {
+    if (initLoad == false) {
+        updateChart();
+    } 
+});
+
+function validate() {
+    newData = [];
+    let api = document.getElementById("userName").value;
+    let errorNote = document.getElementById('errorNote');
+    let mySubString = api.split("/");
+    let arraySearch = mySubString.indexOf("v1");
+
+    if (mySubString[arraySearch + 1] != null && mySubString[arraySearch + 2] != null) {
+        let userName = mySubString[arraySearch + 1];
+        let styleId = mySubString[arraySearch + 2].substr(0, mySubString[arraySearch + 2].indexOf('.'));
+        let accessToken = mySubString[arraySearch + 2].split("=")[3].split("#")[0];
+
+        let url = "https://api.mapbox.com/styles/v1/" + userName + "/" + styleId + "/?access_token=" + accessToken;
+
+        if (userName && styleId && accessToken) {
+            redraw(url);
+            drawMaps(styleId, userName, accessToken);
+        } else {
+            errorNote.style.display = 'block';
+        }
+
+    } else {
+        errorNote.style.display = 'block';
+    }    
+}
+
+function drawMaps(style, user, token) {
+    let styleLayer = 'mapbox://styles/' + user + '/' + style;
+    mapboxgl.accessToken = token;
+
+    const mapLayers = [
+        {divName:'city-map-one', zoomLevel: 8, mapCenter: '-0.11, 51.50'},
+        {divName:'city-map-two', zoomLevel: 10, mapCenter: '-0.11, 51.50'},
+        {divName:'city-map-three', zoomLevel: 15, mapCenter: '-0.11, 51.50'},
+        {divName:'terrain-map-one', zoomLevel: 8, mapCenter: '10.07, 46.38'},
+        {divName:'terrain-map-two', zoomLevel: 10, mapCenter: '10.07, 46.38'},
+        {divName:'terrain-map-three', zoomLevel: 14, mapCenter: '10.07, 46.38'},
+        {divName:'admin-map-one', zoomLevel: 2, mapCenter: '21.02, 10.73'},
+        {divName:'admin-map-two', zoomLevel: 4, mapCenter: '-86.72, 32.74'},
+        {divName:'admin-map-three', zoomLevel: 7, mapCenter: '139.70, 35.69'},
+        {divName:'water-map-one', zoomLevel: 4, mapCenter: '-90.04, 25.16'},
+        {divName:'water-map-two', zoomLevel: 10, mapCenter: '-50.45, -0.06'},
+        {divName:'water-map-three', zoomLevel: 14, mapCenter: '-111.28, 37.06'}
+    ];
+
+    mapLayers.forEach(element => {
+        let div = element.divName;
+        let zoom = element.zoomLevel;
+        let center = element.mapCenter;
+
+        let styleUrl = 'https://api.mapbox.com/styles/v1/' + user + '/' + style + '/static/' + center + ',' + zoom + ',0,0/300x300' + '?access_token=' + token;
+        let imageUrl = '<img src="' + styleUrl + '" alt="Map Style Preview">';
+
+        document.getElementById(div).innerHTML = '<span>Zoom: ' + zoom + '</span>' + imageUrl;
+    });
+}
+
+function screenCap(p) {
+    html2canvas( document.querySelector("#chartHolder"), { logging: true, letterRendering: 1, allowTaint: false, useCORS: true }).then(canvas => {
+        canvas.style.padding = "20px";
+        saveAs(canvas.toDataURL(), 'mapbox-stylesheet.png');
+    });
+}
+
+
+function saveAs(uri, filename) {
+    let link = document.createElement('a');
+    if (typeof link.download === 'string') {
+        link.href = uri;
+        link.download = filename;
+        //Firefox requires the link to be in the body
+        document.body.appendChild(link);
+        //simulate click
+        link.click();
+        //remove the link when done
+        document.body.removeChild(link);
+    } else {
+        window.open(uri);
+    }
+}
+
+
+</script>
+</body>
+</html>
