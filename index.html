@@ -249,7 +249,10 @@ function validate() {
     if (mySubString[arraySearch + 1] != null && mySubString[arraySearch + 2] != null) {
         let userName = mySubString[arraySearch + 1];
         let styleId = mySubString[arraySearch + 2].substr(0, mySubString[arraySearch + 2].indexOf('.'));
-        let accessToken = mySubString[arraySearch + 2].split("=")[3].split("#")[0];
+
+        let accessTokenArray = mySubString[arraySearch + 2].split('=');
+        let accessTokenIndex = accessTokenArray.findIndex(ele => ele.includes("pk"));
+        let accessToken = accessTokenArray[accessTokenIndex].split("&")[0];
 
         let url = "https://api.mapbox.com/styles/v1/" + userName + "/" + styleId + "/?access_token=" + accessToken;
 
