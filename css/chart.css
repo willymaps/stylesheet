@@ -182,11 +182,14 @@ line.before {
 }
 
 #mapHold .map {
-    width: 33%;
+    width: 100%;
     font-size:12px;
-    padding: 10px;
     display: inline-block;
     box-sizing: border-box;
+}
+
+#mapHold .map img {
+    width: 100%
 }
 
 @media (max-width: 900px) {

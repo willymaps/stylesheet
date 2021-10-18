@@ -31,24 +31,7 @@
         </div>
         <h4>Layers</h4>
         <div id="chart"></div>
-        <div id="mapHold">
-            <h4>City Features</h4>
-                <div class="map" id="city-map-one"></div>
-                <div class="map" id="city-map-two"></div>
-                <div class="map" id="city-map-three"></div>
-            <h4>Terrain Features</h4>
-                <div class="map" id="terrain-map-one"></div>
-                <div class="map" id="terrain-map-two"></div>
-                <div class="map" id="terrain-map-three"></div>
-            <h4>Administrative</h4>
-                <div class="map" id="admin-map-one"></div>
-                <div class="map" id="admin-map-two"></div>
-                <div class="map" id="admin-map-three"></div>
-            <h4>Water Features</h4>
-                <div class="map" id="water-map-one"></div>
-                <div class="map" id="water-map-two"></div>
-                <div class="map" id="water-map-three"></div>
-        </div>
+        <div id="mapHold"></div>
     </div>
 </div>
 <script type="text/javascript" src="./js/html2canvas.js"></script>
@@ -60,7 +43,24 @@ const margin = {top: 30, right: 45, bottom: 30, left: 30};
 
 let initLoad = true;
 let newData = [];
-// let newHeight = 0;
+
+// function getMapData(url) {
+
+//     d3.json(url)
+//         .then((data) => {
+//             // console.log('data', data);
+
+//             let dateCreated = new Date(data.created);
+//             let dateChange = new Date(data.modified);
+//             let layers = data.layers;
+
+//             document.getElementById('statName').innerHTML = data.name;
+//             document.getElementById('statOwner').innerHTML = data.owner;
+//             document.getElementById('statCreated').innerHTML = dateCreated.toLocaleString('en-US');
+//             document.getElementById('statModified').innerHTML = dateChange.toLocaleString('en-US');
+//         });
+
+let newHeight = 0;
 
 function redraw(url){
 
@@ -245,6 +245,9 @@ function validate() {
     let errorNote = document.getElementById('errorNote');
     let mySubString = api.split("/");
     let arraySearch = mySubString.indexOf("v1");
+    let mapViewSearch = api.substring(api.indexOf('#') + 1);
+    let mapViewSearchSub = mapViewSearch.split("/");
+    console.log('mysubstring', mapViewSearchSub);
 
     if (mySubString[arraySearch + 1] != null && mySubString[arraySearch + 2] != null) {
         let userName = mySubString[arraySearch + 1];
@@ -256,9 +259,18 @@ function validate() {
 
         let url = "https://api.mapbox.com/styles/v1/" + userName + "/" + styleId + "/?access_token=" + accessToken;
 
+        let mapViewCenter = mapViewSearchSub[2] + ',' + mapViewSearchSub[1];
+        let mapViewBearing = 0;
+        console.log('length', mapViewSearchSub.length);
+        if (mapViewSearchSub.length >= 4) {
+            mapViewBearing = mapViewSearchSub[3];
+        }
+        
+        // let mapViewBearing = mapViewSearchSub[3];
+
         if (userName && styleId && accessToken) {
             redraw(url);
-            drawMaps(styleId, userName, accessToken);
+            drawMaps(styleId, userName, accessToken, mapViewCenter, mapViewBearing);
         } else {
             errorNote.style.display = 'block';
         }
@@ -268,33 +280,70 @@ function validate() {
     }    
 }
 
-function drawMaps(style, user, token) {
+function drawMaps(style, user, token, center, bearing) {
+    
     let styleLayer = 'mapbox://styles/' + user + '/' + style;
 
+    // 20.77/40.7642728/-73.9730084/-151
+
+    const mapQueryCenter = center;
+
     const mapLayers = [
-        {divName:'city-map-one', zoomLevel: 8, mapCenter: '-0.11, 51.50'},
-        {divName:'city-map-two', zoomLevel: 10, mapCenter: '-0.11, 51.50'},
-        {divName:'city-map-three', zoomLevel: 15, mapCenter: '-0.11, 51.50'},
-        {divName:'terrain-map-one', zoomLevel: 8, mapCenter: '10.07, 46.38'},
-        {divName:'terrain-map-two', zoomLevel: 10, mapCenter: '10.07, 46.38'},
-        {divName:'terrain-map-three', zoomLevel: 14, mapCenter: '10.07, 46.38'},
-        {divName:'admin-map-one', zoomLevel: 2, mapCenter: '21.02, 10.73'},
-        {divName:'admin-map-two', zoomLevel: 4, mapCenter: '-86.72, 32.74'},
-        {divName:'admin-map-three', zoomLevel: 7, mapCenter: '139.70, 35.69'},
-        {divName:'water-map-one', zoomLevel: 4, mapCenter: '-90.04, 25.16'},
-        {divName:'water-map-two', zoomLevel: 10, mapCenter: '-50.45, -0.06'},
-        {divName:'water-map-three', zoomLevel: 14, mapCenter: '-111.28, 37.06'}
+        {divName:'map', zoomLevel: 18, mapPitch: 0, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 18, mapPitch: 45, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 18, mapPitch: 60, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 17, mapPitch: 0, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 17, mapPitch: 45, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 17, mapPitch: 60, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 16, mapPitch: 0, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 16, mapPitch: 45, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 16, mapPitch: 60, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 15, mapPitch: 0, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 15, mapPitch: 45, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 15, mapPitch: 60, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 14, mapPitch: 0, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 14, mapPitch: 45, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 14, mapPitch: 60, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 13, mapPitch: 0, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 12, mapPitch: 0, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 11, mapPitch: 0, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 10, mapPitch: 0, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 9, mapPitch: 0, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 8, mapPitch: 0, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 7, mapPitch: 0, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 6, mapPitch: 0, mapCenter: mapQueryCenter},
+        {divName:'map', zoomLevel: 5, mapPitch: 0, mapCenter: mapQueryCenter}
     ];
 
-    mapLayers.forEach(element => {
-        let div = element.divName;
-        let zoom = element.zoomLevel;
-        let center = element.mapCenter;
+    let currentZoom = 0;
 
-        let styleUrl = 'https://api.mapbox.com/styles/v1/' + user + '/' + style + '/static/' + center + ',' + zoom + ',0,0/300x300' + '?access_token=' + token;
-        let imageUrl = '<img src="' + styleUrl + '" alt="Map Style Preview">';
+    mapLayers.forEach((element, index) => {
 
-        document.getElementById(div).innerHTML = '<span>Zoom: ' + zoom + '</span>' + imageUrl;
+        const div = element.divName;
+        const zoom = element.zoomLevel;
+        const center = element.mapCenter;
+        const pitch = element.mapPitch;
+
+        
+        const zoomHead = document.createElement('h4');
+        zoomHead.textContent = 'Zoom ' + zoom;
+
+        if (currentZoom != zoom) {
+            document.getElementById('mapHold').appendChild(zoomHead);
+        }
+        
+        const styleUrl = 'https://api.mapbox.com/styles/v1/' + user + '/' + style + '/static/' + center + ',' + zoom + ',' + bearing + ',' + pitch + '/1280x600' + '?access_token=' + token;
+        const imageUrl = '<img src="' + styleUrl + '" alt="Map Style Preview">';
+
+        console.log('styleURL', styleUrl);
+
+        // console.log('index', div[index]);
+        const mapDiv = document.createElement('div');
+        mapDiv.classList.add('map');
+        mapDiv.innerHTML = '<span>Pitch: ' + pitch + '</span>' + imageUrl;
+        document.getElementById('mapHold').appendChild(mapDiv);
+        // document.getElementsByClassName(div)[index].innerHTML = '<span>Pitch: ' + pitch + '</span>' + imageUrl;
+        currentZoom = zoom;
     });
 }
 
